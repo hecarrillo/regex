@@ -49,15 +49,15 @@ fn substraction(language1: HashSet<String>, language2: HashSet<String>) -> HashS
 
 fn generate_language(data: &Vec<u32>, user_alphabet: &HashSet<String>) -> HashSet<String>{
   let mut rng = rand::thread_rng();
-  let mut string = String::new();
   let mut new_language: HashSet<String> = HashSet::new();
-  for _x in 0..data[0] {
-    for _y in 0..data[1]{
-      //let x = rng.gen_range(0, user_alphabet.len().try_into().unwrap());
-      string.push_str(&user_alphabet.iter().nth((rng.gen_range(0, user_alphabet.len())).try_into().unwrap()).expect("ERROR"));
+  let mut symbol_count: u32 = 0;
+  while new_language.len() < data[0].clone() as usize{
+    let mut string = String::new();
+    for i in 0..data[1]{
+      // insert a random symbol from the alphabet
+      string.push_str(user_alphabet.iter().nth(rng.gen_range(0, user_alphabet.len())).unwrap());
     }
     new_language.insert(string);
-    string = String::new();
   }
   return new_language;
 }
