@@ -112,7 +112,6 @@ fn read_user_defined_alphabet() -> HashSet<String> {
 
 fn read_string() -> String {
   let mut input = String::new();
-  println!("Please enter a string: ");
   io::stdin().read_line(&mut input).expect("Failed to read line");
   return input.trim().to_string();
 }
