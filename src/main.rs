@@ -1,8 +1,9 @@
 use std::io;
 use std::collections::HashSet; 
+use tailcall::tailcall;
 
 fn main() {
-  let user_alphabet: HashSet<String> = read_user_defined_alphabet();
+  let user_alphabet = read_user_defined_alphabet();
   // print the alphabet
   println!("El alfabeto es: {:?}", user_alphabet);
   // read two strings and check if they are valid
@@ -11,6 +12,71 @@ fn main() {
   // print the strings
   println!("La primera cadena es: {}", string1);
   println!("La segunda cadena es: {}", string2);
+  println!(" {} ", check_combination(&string1,&string2));
+  println!(" Valor de string2 no cambio {}", string2);
+  println!(" El alfabeto a la potencia n es {:?}", get_all_combinations(&user_alphabet, 3));
+}
+
+fn get_all_combinations(alphabet: &HashSet<String>, n: usize) -> HashSet<String> {
+  let mut combinations: HashSet<String> = HashSet::new();
+  if n == 0 {
+    combinations.insert("".to_string());
+    return combinations;
+  }
+  for character in alphabet {
+    let mut previous_combinations = get_all_combinations(alphabet, n - 1);
+    // create a vector to store all new combinations 
+    let mut new_combinations_vector: Vec<String> = Vec::new();
+    for combination in previous_combinations {
+      let mut new_combination = combination.clone();
+      new_combination.push_str(character);
+      new_combinations_vector.push(new_combination);
+    }
+    // add all new combinations to the set
+    for combination in new_combinations_vector {
+      combinations.insert(combination);
+    }
+  }
+  return combinations;
+}
+
+fn check_combination(string1: &String, string2: &String) -> String {
+  let mut combination : String = String::new();
+  while combination == ""{
+    if string2.contains(string1){
+      combination = is_prefix_suffix_or_substring(&string1, &string2);
+    } else {
+      combination = is_subsequense(&string1, string2.to_string()).to_string();
+  }
+  }
+  return combination.to_string();
+}
+
+fn is_prefix_suffix_or_substring(string1: &String, string2: &String) -> String{
+
+  if string2.len() == string1.len(){
+    return "La cadena 1 es un sufijo impropio de la cadena 2".to_string();
+  }
+  if string2.starts_with(string1){
+    return "La cadena 1 es un sufijo propio de la cadena 2".to_string();
+  } else if string2.ends_with(string1){
+    return "La cadena 1 es un prefijo propio de la cadena 2".to_string();
+  }
+  return "La cadena 1 es una subcadena de la cadena 2".to_string();
+  
+}
+
+fn is_subsequense(string1: &String, mut string2 : String) -> String {
+  let string2_size = string2.len();
+  let in_order = 0;
+  for character in string1.chars(){
+    string2.retain(|c| c != character);
+    
+  }
+  if string2_size - string2.len() == string1.len(){
+    return "La cadena 1 es subsecuencia de la cadena 2".to_string();
+  }
+    return "La cadena 1 no esta contenida en la cadena 2".to_string();
 }
 
 fn read_valid_string(alphabet: &HashSet<String>) -> String {
