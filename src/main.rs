@@ -1,30 +1,94 @@
 use std::io;
 use std::collections::HashSet; 
-use tailcall::tailcall;
+use regex::Regex;
+use rand::Rng;
 
 fn main() {
   let user_alphabet = read_user_defined_alphabet();
   // print the alphabet
   println!("El alfabeto es: {:?}", user_alphabet);
   // read two strings and check if they are valid
+  println!("____ OPERACIONES CON CADENAS: SUFIJOS, PREFIJOS, SUBCADENAS Y SUBSECUENCIAS ____");
   let string1 = read_valid_string(&user_alphabet);
   let string2 = read_valid_string(&user_alphabet);
-  // print the strings
-  println!("La primera cadena es: {}", string1);
-  println!("La segunda cadena es: {}", string2);
-  println!(" {} ", check_combination(&string1,&string2));
-  println!(" Valor de string2 no cambio {}", string2);
-  println!(" El alfabeto a la potencia n es {:?}", get_all_combinations(&user_alphabet, 3));
+  println!(" {} ", check_string_relationship(&string1,&string2));
+  
+  println!("____ LENGUAJES REGULARES ____");
+  let data: Vec<u32> = data_language();
+  let language1: HashSet<String> = generate_language(&data,&user_alphabet);
+  let language2: HashSet<String> = generate_language(&data,&user_alphabet);
+  println!(" Los nuevos lenguajes generados son: {:?} y {:?} ", language1, language2);
+  println!(" La resta de los 2 lenguajes es: {:?}", substraction(language1, language2));
+
+  // Rise the alphabet to the power of a user defined number
+  println!("\n____ OPERACIONES CON CADENAS: POTENCIA DE UN ALFABETO ____");
+  let power: usize= read_user_defined_power();
+  let alphabet_rose_to_n = rise_alphabet_to_n(&user_alphabet, power);
+  println!(" El alfabeto a la potencia n es {:?}", alphabet_rose_to_n);
+
+  // Read a string and check if it has the vowels in it in order using regex
+  println!("\n____ EXPRESIONES REGULARES: VOCAL CONSECUTIVA ____");
+  // Regex to check if a string has all the vowels in it in order
+  let vowels_regex = Regex::new(r"^([^aeiou]*a[^eiou]*e[^iou]*i[^ou]*o[^u]*u[a-z]*)$").unwrap();
+  // Read a string until it matches the regex
+  let mut string_with_vowels_in_order = String::new();
+  while !vowels_regex.is_match(&string_with_vowels_in_order) {
+    println!("Ingrese una cadena que contenga las vocales en orden:");
+    io::stdin().read_line(&mut string_with_vowels_in_order).expect("Failed to read line");
+    string_with_vowels_in_order = string_with_vowels_in_order.trim().to_string();
+  }
 }
 
-fn get_all_combinations(alphabet: &HashSet<String>, n: usize) -> HashSet<String> {
+fn substraction(language1: HashSet<String>, language2: HashSet<String>) -> HashSet<String>{
+  let mut new_language: HashSet<String> = language1;
+  for element in language2.iter(){
+    new_language.remove(element);
+  }
+  return new_language;
+}
+
+fn generate_language(data: &Vec<u32>, user_alphabet: &HashSet<String>) -> HashSet<String>{
+  let mut rng = rand::thread_rng();
+  let mut string = String::new();
+  let mut new_language: HashSet<String> = HashSet::new();
+  for _x in 0..data[0] {
+    for _y in 0..data[1]{
+      //let x = rng.gen_range(0, user_alphabet.len().try_into().unwrap());
+      string.push_str(&user_alphabet.iter().nth((rng.gen_range(0, user_alphabet.len())).try_into().unwrap()).expect("ERROR"));
+    }
+    new_language.insert(string);
+    string = String::new();
+  }
+  return new_language;
+}
+
+fn data_language() -> Vec<u32> {
+  let mut elements_and_lenght: Vec<u32> = Vec::new();
+  let mut input = String::new();
+  println!("Ingresa el numero de elementos y la longitud de los lenguajes a generar separados por un espacio: ");
+  io::stdin().read_line(&mut input).expect("Failed to read line");
+  for symbol in input.split_whitespace() {
+    elements_and_lenght.push(symbol.parse::<u32>().unwrap());
+  }
+  return elements_and_lenght;
+}
+
+fn read_user_defined_power() -> usize {
+  println!("Ingrese un numero entero positivo:");
+  let mut power = String::new();
+  io::stdin().read_line(&mut power).expect("Failed to read line");
+  let power: usize = power.trim().parse().expect("Please type a number!");
+  return power;
+}
+
+fn rise_alphabet_to_n(alphabet: &HashSet<String>, n: usize) -> HashSet<String> {
   let mut combinations: HashSet<String> = HashSet::new();
   if n == 0 {
     combinations.insert("".to_string());
     return combinations;
   }
   for character in alphabet {
-    let mut previous_combinations = get_all_combinations(alphabet, n - 1);
+    let previous_combinations = rise_alphabet_to_n(alphabet, n - 1);
     // create a vector to store all new combinations 
     let mut new_combinations_vector: Vec<String> = Vec::new();
     for combination in previous_combinations {
@@ -40,13 +104,13 @@ fn get_all_combinations(alphabet: &HashSet<String>, n: usize) -> HashSet<String>
   return combinations;
 }
 
-fn check_combination(string1: &String, string2: &String) -> String {
+fn check_string_relationship(string1: &String, string2: &String) -> String {
   let mut combination : String = String::new();
   while combination == ""{
     if string2.contains(string1){
       combination = is_prefix_suffix_or_substring(&string1, &string2);
     } else {
-      combination = is_subsequense(&string1, string2.to_string()).to_string();
+      combination = is_subsequence(&string1, string2.to_string()).to_string();
   }
   }
   return combination.to_string();
@@ -55,28 +119,36 @@ fn check_combination(string1: &String, string2: &String) -> String {
 fn is_prefix_suffix_or_substring(string1: &String, string2: &String) -> String{
 
   if string2.len() == string1.len(){
-    return "La cadena 1 es un sufijo impropio de la cadena 2".to_string();
+    return "La cadena 1 es un sufijo y prefijo impropio de la cadena 2".to_string();
   }
   if string2.starts_with(string1){
-    return "La cadena 1 es un sufijo propio de la cadena 2".to_string();
-  } else if string2.ends_with(string1){
     return "La cadena 1 es un prefijo propio de la cadena 2".to_string();
+  } else if string2.ends_with(string1){
+    return "La cadena 1 es un sufijo propio de la cadena 2".to_string();
   }
   return "La cadena 1 es una subcadena de la cadena 2".to_string();
   
 }
 
-fn is_subsequense(string1: &String, mut string2 : String) -> String {
-  let string2_size = string2.len();
-  let in_order = 0;
-  for character in string1.chars(){
-    string2.retain(|c| c != character);
-    
+fn is_subsequence(string1: &String, string2 : String) -> String {
+  let  string1 = string1.clone();
+  let  string2 = string2.clone();
+  let  string1_chars: Vec<char> = string1.chars().collect();
+  let  string2_chars: Vec<char> = string2.chars().collect();
+  let mut i = 0;
+  let mut j = 0;
+  while i < string1_chars.len() && j < string2_chars.len() {
+    if string1_chars[i] == string2_chars[j] {
+      i += 1;
+      j += 1;
+    } else {
+      j += 1;
+    }
   }
-  if string2_size - string2.len() == string1.len(){
-    return "La cadena 1 es subsecuencia de la cadena 2".to_string();
+  if i == string1_chars.len() {
+    return "La cadena 1 es una subsecuencia de la cadena 2".to_string();
   }
-    return "La cadena 1 no esta contenida en la cadena 2".to_string();
+  return "La cadena 1 no es una subsecuencia de la cadena 2".to_string();
 }
 
 fn read_valid_string(alphabet: &HashSet<String>) -> String {
@@ -117,25 +189,18 @@ fn read_string() -> String {
 }
 
 fn read_alphabet_input_type() -> String {
-  let stdin = io::stdin();
-
   println!("Seleccione la forma de ingresar el alfabeto:");
   println!("1) Por rango"); 
   println!("2) De manera individual"); 
   
-  let mut input_form = String::new();
-  stdin.read_line(&mut input_form);
-  
-  return input_form.trim().to_string();
+  return read_string();
 }
 
 fn read_alphabet_from_list () -> HashSet<String> {
-  let stdin = io::stdin();
   let mut user_alphabet: HashSet<String> = HashSet::new();
   
   println!("Ingrese el alfabeto de la gramática, separado por espacios:");
-  let mut input_alphabet = String::new();
-  stdin.read_line(&mut input_alphabet);
+  let input_alphabet: String = read_string();
   
   for symbol in input_alphabet.split_whitespace() {
     user_alphabet.insert(symbol.to_string());
