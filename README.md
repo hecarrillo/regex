@@ -7,3 +7,6 @@ This is a project to demonstrate operations over regular languages and its prope
 - Regular Expressions.
 
 Built with Rust to learn it from scratch.
+
+## To run: 
+`cargo run`
